@@ -6,11 +6,11 @@ with open('./secrets.json') as f:
 
 
 class Davinci3:
-    def __init__(self):
-        openai.api_key = credentials["chatengine"]["AZURE_OPENAI_KEY"]
+    def __init__(self):      
+        openai.api_type = "azure"
         openai.api_base = credentials["chatengine"]["AZURE_OPENAI_ENDPOINT"]
-        openai.api_type = 'azure'
-        openai.api_version = '2022-12-01'
+        openai.api_version = "2023-03-15-preview"
+        openai.api_key = credentials["chatengine"]["AZURE_OPENAI_KEY"]
         self.messages = []
         self.max_token_length_input = 2048
         self.max_token_length_total = 4096
@@ -52,12 +52,12 @@ class Davinci3:
 
 class ChatGPT:
     def __init__(self):
-        openai.api_key = credentials["chatengine"]["AZURE_OPENAI_KEY"]
+        openai.api_type = "azure"
         openai.api_base = credentials["chatengine"]["AZURE_OPENAI_ENDPOINT"]
-        openai.api_type = 'azure'
-        openai.api_version = '2022-12-01'
+        openai.api_version = "2023-03-15-preview"
+        openai.api_key = credentials["chatengine"]["AZURE_OPENAI_KEY"]
         self.messages = []
-        self.max_token_length = 4096
+        self.max_token_length = 16000
         self.system_message = "<|im_start|>system\n" + \
             "You are an excellent chat bot, named MSRAbot. " + \
             "You are embodied with a small robot, which makes lively gestures in response to your speech. " + \
@@ -90,10 +90,12 @@ class ChatGPT:
 
         # cut off long input
         if len(message) > self.max_token_length:
-            message = message[:self.max_token_length]
-        self.messages.append({'sender': 'user', 'text': message})
+            message = message[:self.max_token_length]  
+        print(self.messages)      
+        self.messages.append({"role": "system", "content": "You are an AI assistant that helps people find information.Please response no later than 12 words"})
+        self.messages.append({"role": "user", "content": message})
 
-        response = openai.Completion.create(
+        """ response = openai.Completion.create(
             engine=deployment_name,
             prompt=self.create_prompt(self.messages),
             temperature=0,
@@ -104,5 +106,20 @@ class ChatGPT:
             stop=["<|im_end|>"])
         text = response['choices'][0]['text'].replace(
             '\n', '').replace(' .', '.').strip()
-        self.messages.append({"sender": "assistant", "text": text})
-        return text
+        self.messages.append({"sender": "assistant", "text": text}) """
+        
+    
+        response = openai.ChatCompletion.create(
+            engine="gpt-35-turbo-16k",
+            messages = self.messages,
+            temperature=0.7,
+            max_tokens=800,
+            top_p=0.95,
+            frequency_penalty=0,
+            presence_penalty=0,
+            stop=None)
+        
+        text = json.loads(str(response['choices'][0]['message']))
+        print(text["content"])
+        self.messages.append({"role": "assistant", "content": text["content"]})
+        return text["content"]

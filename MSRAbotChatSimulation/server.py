@@ -135,6 +135,7 @@ async def interface(user_input, aimodel):
 async def gestureselector(agent_input, session_id):
     # any algorithm is OK, as long as it returns intent from user input.
     # intent should be the prefix of the json file (e.g., away, deictic, etc.)
+    print("analyze_input content:" + str(agent_input))
     intent = gestureengine.analyze_input(agent_input)
     print('intent is:' + intent)
     jsoncandidate = []
